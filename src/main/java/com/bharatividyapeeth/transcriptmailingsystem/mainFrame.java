@@ -241,6 +241,7 @@ public class mainFrame extends javax.swing.JFrame {
         newRecord.add(mobNumber, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 120, 150, -1));
 
         emailAddress.setBackground(new java.awt.Color(231, 235, 238));
+        emailAddress.setText("chinmaytawde15@gmail.com");
         newRecord.add(emailAddress, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 170, 190, -1));
 
         departmentComboBox.setBackground(new java.awt.Color(231, 235, 238));
@@ -531,9 +532,9 @@ public class mainFrame extends javax.swing.JFrame {
         try {
             // TODO add your handling code here:
             String name = studentName.getText();
-            checkValidName(name);
+            //checkValidName(name);
             String number = mobNumber.getText();
-            checkValidNumber(number);
+            //checkValidNumber(number);
             String emailAdd = emailAddress.getText();
             checkValidEmailAdd(emailAdd);
             String dept = departmentComboBox.getItemAt(departmentComboBox.getSelectedIndex());
@@ -562,8 +563,8 @@ public class mainFrame extends javax.swing.JFrame {
                 showMessageDialog(null, "New student record has been added.",
                         "Information", JOptionPane.INFORMATION_MESSAGE);
                 resetAddNewRecords();
-                sql = "INSERT INTO Transcript_Received (name, phone_number, email_address, dept_code, received_date) "
-                        + "SELECT name, phone_number, email_address, dept_code, datetime('now') FROM Students WHERE id = " + studentId;
+                sql = "INSERT INTO Transcript_Received (id, name, phone_number, email_address, dept_code, received_date) "
+                        + "SELECT id, name, phone_number, email_address, dept_code, datetime('now') FROM Students WHERE id = " + studentId;
                 pstmt = conn.prepareStatement(sql);
                 pstmt.executeUpdate();
                 sendMail(studentList, RECEIVED);
@@ -587,12 +588,15 @@ public class mainFrame extends javax.swing.JFrame {
             String name = (String) recievedTable.getValueAt(i, 1);
             String emailAdd = (String) recievedTable.getValueAt(i, 3);
             studentList.add(new Student(studentId, name, emailAdd));
-            moveToNextState(studentId, TRANSCRIPT_RECIEVED, TRANSCRIPT_READY);
+            moveToNextState(studentId, TRANSCRIPT_RECIEVED, TRANSCRIPT_READY, "ready_date");
         }
-        try {
-            sendMail(studentList, READY);
-        } catch (SQLException ex) {
-            Logger.getLogger(mainFrame.class.getName()).log(Level.SEVERE, null, ex);
+        getRecievedList();
+        if (!studentList.isEmpty()) {
+            try {
+                sendMail(studentList, READY);
+            } catch (SQLException ex) {
+                Logger.getLogger(mainFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }//GEN-LAST:event_move_to_ready_btn1MouseClicked
 
@@ -605,13 +609,9 @@ public class mainFrame extends javax.swing.JFrame {
             String name = (String) readyTable.getValueAt(i, 1);
             String emailAdd = (String) readyTable.getValueAt(i, 3);
             studentList.add(new Student(studentId, name, emailAdd));
-            moveToNextState(studentId, TRANSCRIPT_READY, TRANSCRIPT_COLLECTED);
+            moveToNextState(studentId, TRANSCRIPT_READY, TRANSCRIPT_COLLECTED, "collected_date");
         }
-        try {
-            sendMail(studentList, COLLECTED);
-        } catch (SQLException ex) {
-            Logger.getLogger(mainFrame.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        getReadyList();
     }//GEN-LAST:event_move_to_collected_btnMouseClicked
 
     private void getStudentList() {
@@ -946,7 +946,7 @@ public class mainFrame extends javax.swing.JFrame {
                 Transport.send(message);
                 setSentMailTrue(purpose, student.getId());
             }
-            JOptionPane.showMessageDialog(this, "message sent successfully", "Email Information", JOptionPane.INFORMATION_MESSAGE);
+            //JOptionPane.showMessageDialog(this, "Message sent successfully", "Email Information", JOptionPane.INFORMATION_MESSAGE);
         } catch (MessagingException e) {
             JOptionPane.showMessageDialog(this, e, e.getMessage(), WIDTH, null);
         }
@@ -955,7 +955,8 @@ public class mainFrame extends javax.swing.JFrame {
     private void loadProperties() {
         InputStream input = null;
         try {
-            input = new FileInputStream("F:\\Projects\\transcriptMailingSystem\\resources\\mail.properties");
+            String currDir = System.getProperty("user.dir");
+            input = new FileInputStream(currDir + "\\resources\\mail.properties");
             props.load(input);
         } catch (FileNotFoundException ex) {
             JOptionPane.showMessageDialog(this, ex, ex.getMessage(), WIDTH, null);
@@ -1037,12 +1038,12 @@ public class mainFrame extends javax.swing.JFrame {
         }
     }
 
-    private void moveToNextState(int studentId, String tableFrom, String tableTo) {
+    private void moveToNextState(int studentId, String tableFrom, String tableTo, String dateColumn) {
         Connection conn = null;
         PreparedStatement ps = null;
         try {
-            String sql = "INSERT INTO " + tableTo + " (name, phone_number, email_address, dept_code, received_date) "
-                        + "SELECT name, phone_number, email_address, dept_code, datetime('now') FROM Students WHERE id = " + studentId;
+            String sql = "INSERT INTO " + tableTo + " (id, name, phone_number, email_address, dept_code, " + dateColumn + ")"
+                        + "SELECT id, name, phone_number, email_address, dept_code, datetime('now') FROM Students WHERE id = " + studentId;
             conn = dbConn.getConnection();
             ps = conn.prepareStatement(sql);
             ps.execute();
@@ -1059,7 +1060,5 @@ public class mainFrame extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(this, ex, ex.getMessage(), WIDTH, null);
             }
         }
-    }
-
-
+    }    
 }

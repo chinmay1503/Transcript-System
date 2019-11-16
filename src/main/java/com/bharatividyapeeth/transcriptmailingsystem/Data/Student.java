@@ -23,6 +23,7 @@ public class Student {
     private String emailAddress;
 
     public Student(int id, String name, String emailAddress) {
+        this.id = id;
         this.name = name;
         this.emailAddress = emailAddress;
     }
