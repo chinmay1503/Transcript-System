@@ -46,6 +46,11 @@ import static com.bharatividyapeeth.transcriptmailingsystem.Data.Constants.RECEI
 import static com.bharatividyapeeth.transcriptmailingsystem.Data.Constants.TRANSCRIPT_COLLECTED;
 import static com.bharatividyapeeth.transcriptmailingsystem.Data.Constants.TRANSCRIPT_READY;
 import static com.bharatividyapeeth.transcriptmailingsystem.Data.Constants.TRANSCRIPT_RECIEVED;
+import static com.bharatividyapeeth.transcriptmailingsystem.Data.EmailMessage.end_message;
+import static com.bharatividyapeeth.transcriptmailingsystem.Data.EmailMessage.greeting;
+import static com.bharatividyapeeth.transcriptmailingsystem.Data.EmailMessage.header_message;
+import static com.bharatividyapeeth.transcriptmailingsystem.Data.EmailMessage.ready_message;
+import static com.bharatividyapeeth.transcriptmailingsystem.Data.EmailMessage.recieved_message;
 import com.bharatividyapeeth.transcriptmailingsystem.Exception.TranscriptException;
 import static java.awt.image.ImageObserver.WIDTH;
 import java.beans.PropertyChangeEvent;
@@ -53,8 +58,10 @@ import java.beans.PropertyChangeListener;
 import java.text.ParseException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.mail.Transport;
 import javax.swing.table.TableColumnModel;
 import org.oxbow.swingbits.table.filter.TableRowFilterSupport;
+import org.sqlite.SQLiteDataSource;
 
 /**
  *
@@ -70,8 +77,9 @@ public class mainFrame extends javax.swing.JFrame {
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     SimpleDateFormat simpleFormat = new SimpleDateFormat("dd-MM-yyyy");
     Properties props = new Properties();
+
     public mainFrame() {
-        
+
         initComponents();
         customizeTables();
         loadProperties();
@@ -115,6 +123,7 @@ public class mainFrame extends javax.swing.JFrame {
         studentsPanel = new javax.swing.JPanel();
         jScrollPane6 = new javax.swing.JScrollPane();
         studentDetailsTable = new javax.swing.JTable();
+        delete_btn = new javax.swing.JLabel();
         recievedPanel = new javax.swing.JPanel();
         jScrollPane5 = new javax.swing.JScrollPane();
         receivedTable = new javax.swing.JTable();
@@ -350,6 +359,20 @@ public class mainFrame extends javax.swing.JFrame {
 
         studentsPanel.add(jScrollPane6, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 70, 870, -1));
 
+        delete_btn.setBackground(new java.awt.Color(29, 47, 61));
+        delete_btn.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        delete_btn.setForeground(new java.awt.Color(255, 255, 255));
+        delete_btn.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        delete_btn.setText("Delete");
+        delete_btn.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(51, 255, 204), 1, true));
+        delete_btn.setOpaque(true);
+        delete_btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                delete_btnMouseClicked(evt);
+            }
+        });
+        studentsPanel.add(delete_btn, new org.netbeans.lib.awtextra.AbsoluteConstraints(470, 540, 150, 30));
+
         rightPanel.add(studentsPanel, "studentsPanel");
 
         recievedPanel.setBackground(new java.awt.Color(33, 63, 86));
@@ -480,22 +503,22 @@ public class mainFrame extends javax.swing.JFrame {
         pack();
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
-    
+
     public void setLblColor(JLabel lbl) {
-        lbl.setBackground(new Color(22,42,57));
+        lbl.setBackground(new Color(22, 42, 57));
     }
-    
+
     public void resetLblColor(JLabel lbl) {
-        lbl.setBackground(new Color(33,63,86));
+        lbl.setBackground(new Color(33, 63, 86));
     }
-    
+
     public void resetBtnColors(JLabel lbl1, JLabel lbl2, JLabel lbl3, JLabel lbl4) {
         resetLblColor(lbl1);
         resetLblColor(lbl2);
         resetLblColor(lbl3);
         resetLblColor(lbl4);
     }
-    
+
     private void departmentComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_departmentComboBoxActionPerformed
         // TODO add your handling code here:
 
@@ -513,7 +536,7 @@ public class mainFrame extends javax.swing.JFrame {
     private void add_new_record_btnMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_add_new_record_btnMouseClicked
         setLblColor(add_new_record_btn);
         resetBtnColors(student_list_btn, trans_rec_btn, trans_ready_btn, trans_collected_btn);
-        cardLayout.show(rightPanel, "newRecord");      
+        cardLayout.show(rightPanel, "newRecord");
     }//GEN-LAST:event_add_new_record_btnMouseClicked
 
     private void student_list_btnMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_student_list_btnMouseClicked
@@ -550,12 +573,11 @@ public class mainFrame extends javax.swing.JFrame {
 
     private void submit_btnMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_submit_btnMouseClicked
         try {
-            // TODO add your handling code here:
             String name = studentName.getText();
-            //checkValidName(name);
+            checkValidName(name);
             String number = mobNumber.getText();
-            //checkValidNumber(number);
-            //checkUnique(number);
+            checkValidNumber(number);
+            checkUnique(number);
             String emailAdd = emailAddress.getText();
             checkValidEmailAdd(emailAdd);
             String dept = departmentComboBox.getItemAt(departmentComboBox.getSelectedIndex());
@@ -581,7 +603,7 @@ public class mainFrame extends javax.swing.JFrame {
                 Student student = new Student(studentId, name, emailAdd);
                 List<Student> studentList = new ArrayList();
                 studentList.add(student);
-                showMessageDialog(null, "New student record has been added.",
+                showMessageDialog(null, "New student record has been added and mail has been sent!.",
                         "Information", JOptionPane.INFORMATION_MESSAGE);
                 resetAddNewRecords();
                 sql = "INSERT INTO Transcript_Received (id, name, phone_number, email_address, dept_code, received_date) "
@@ -634,6 +656,14 @@ public class mainFrame extends javax.swing.JFrame {
         }
         getReadyList();
     }//GEN-LAST:event_move_to_collected_btnMouseClicked
+
+    private void delete_btnMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_delete_btnMouseClicked
+        int dialogResult = JOptionPane.showConfirmDialog(null, "Are you Sure you want to Delete?", "Warning", JOptionPane.YES_NO_OPTION);
+        if (dialogResult == JOptionPane.YES_OPTION) {
+            deleteRecords();
+            getStudentList();
+        }
+    }//GEN-LAST:event_delete_btnMouseClicked
 
     private void getStudentList() {
         Connection conn = null;
@@ -796,7 +826,7 @@ public class mainFrame extends javax.swing.JFrame {
                 }
                 tableModel.addRow(row);
             }
-            tableModel.fireTableDataChanged();           
+            tableModel.fireTableDataChanged();
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         } finally {
@@ -847,6 +877,7 @@ public class mainFrame extends javax.swing.JFrame {
     private javax.swing.JLabel cancel_btn;
     private javax.swing.JPanel collectedPanel;
     private javax.swing.JTable collectedTable;
+    private javax.swing.JLabel delete_btn;
     private javax.swing.JComboBox<String> departmentComboBox;
     private javax.swing.JLabel deptlbl;
     private javax.swing.JTextField emailAddress;
@@ -951,24 +982,27 @@ public class mainFrame extends javax.swing.JFrame {
         String from = props.getProperty("email.id");
         String password = props.getProperty("email.password");
         String sub = getSubject(purpose);
-        String msg = getMessage(purpose);
+        String header = header_message + greeting + " " + "name !";
+        String msg = header + " " + getMessage(purpose) + " " + end_message;
         Session session = getSession(from, password);
         //compose message    
         try {
             MimeMessage message = new MimeMessage(session);
             message.setSubject(sub);
-            message.setText(msg);
+
             for (Student student : students) {
                 //send message
+                msg = msg.replace("name", student.getName());
+                message.setContent(msg, "text/html");
                 message.addRecipient(Message.RecipientType.TO, new InternetAddress(student.getEmailAddress()));
-                //Transport.send(message);                      //TODO : Turn it on later
+                Transport.send(message);                      //TODO : Turn it on later
                 setSentMailTrue(purpose, student.getId());
             }
             //JOptionPane.showMessageDialog(this, "Message sent successfully", "Email Information", JOptionPane.INFORMATION_MESSAGE);
         } catch (MessagingException e) {
             JOptionPane.showMessageDialog(this, e, e.getMessage(), WIDTH, null);
         }
-    }   
+    }
 
     private void loadProperties() {
         InputStream input = null;
@@ -1001,15 +1035,15 @@ public class mainFrame extends javax.swing.JFrame {
             return "Transcript Recieved";
         } else if (purpose.equals(READY)) {
             return "Transcript Ready";
-        } 
-       return "";
+        }
+        return "";
     }
-    
+
     private String getMessage(String purpose) {
         if (purpose.equals(RECEIVED)) {
-            return "Your transcript has been recieved and will be ready in 10-15 working days";
+            return recieved_message;
         } else if (purpose.equals(READY)) {
-            return "Your transcript is ready and can be collected from exam cell";
+            return ready_message;
         }
         return "";
     }
@@ -1032,7 +1066,7 @@ public class mainFrame extends javax.swing.JFrame {
                         updateData(table1);
                         refreshData(table1.getToolTipText());
                     }
-                } 
+                }
             }
 
             private void updateData(JTable table1) {
@@ -1097,13 +1131,13 @@ public class mainFrame extends javax.swing.JFrame {
 
     private void setSentMailTrue(String purpose, int studentId) throws SQLException {
         String tableName = null;
-        switch(purpose) {
+        switch (purpose) {
             case RECEIVED:
                 tableName = "Transcript_Received";
-               break;
+                break;
             case READY:
                 tableName = "Transcript_Ready";
-               break;          
+                break;
         }
         String sql = "UPDATE " + tableName + " set isMailSent = 1 WHERE id = " + studentId;
         Connection conn = null;
@@ -1125,7 +1159,7 @@ public class mainFrame extends javax.swing.JFrame {
         PreparedStatement ps = null;
         try {
             String sql = "INSERT INTO " + tableTo + " (id, name, phone_number, email_address, dept_code, " + dateColumn + ")"
-                        + "SELECT id, name, phone_number, email_address, dept_code, datetime('now', 'localtime') FROM Students WHERE id = " + studentId;
+                    + "SELECT id, name, phone_number, email_address, dept_code, datetime('now', 'localtime') FROM Students WHERE id = " + studentId;
             conn = dbConn.getConnection();
             ps = conn.prepareStatement(sql);
             ps.execute();
@@ -1143,10 +1177,11 @@ public class mainFrame extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(this, ex, ex.getMessage(), WIDTH, null);
             }
         }
-    }    
+    }
 
     private void initializeOtherStuff() {
         fillDeptCombo();
+        enableSQLiteCascadeDeletes();
     }
 
     private void checkUnique(String number) throws TranscriptException {
@@ -1159,7 +1194,7 @@ public class mainFrame extends javax.swing.JFrame {
             String sql = "SELECT COUNT(1) FROM Students WHERE phone_numer = " + number;
             ps = conn.prepareStatement(sql);
             rs = ps.executeQuery();
-            while(rs.next()) {
+            while (rs.next()) {
                 checkUniqueCount = rs.getInt(1);
             }
             if (checkUniqueCount > 0) {
@@ -1186,7 +1221,7 @@ public class mainFrame extends javax.swing.JFrame {
             String columnName = getFlagColumn(tableTo);
             String sql = "UPDATE Students set " + columnName + " = 1 WHERE id = " + studentId;
             ps = conn.prepareStatement(sql);
-            ps.execute();        
+            ps.execute();
         } catch (SQLException ex) {
             Logger.getLogger(mainFrame.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
@@ -1199,12 +1234,56 @@ public class mainFrame extends javax.swing.JFrame {
         }
     }
 
-    private String getFlagColumn(String tableTo) {       
+    private String getFlagColumn(String tableTo) {
         if (tableTo.equals(TRANSCRIPT_READY)) {
             return "is_ready";
         } else if (tableTo.equals(TRANSCRIPT_COLLECTED)) {
             return "is_collected";
         }
         return "";
+    }
+
+    private void deleteRecords() {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            int[] rows = studentDetailsTable.getSelectedRows();
+            for (int i : rows) {
+                conn = dbConn.getConnection();
+                String id = (String) studentDetailsTable.getValueAt(i, 0);
+                int studentId = Integer.parseInt(id);
+                String sql = "Delete FROM Students WHERE id = " + studentId;
+                ps = conn.prepareStatement(sql);
+                ps.execute();
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(studentDetailsTable, ex, ex.getMessage(), WIDTH, null);
+        } finally {
+            try {
+                DbUtils.close(ps);
+                DbUtils.close(conn);
+            } catch (SQLException ex) {
+                Logger.getLogger(mainFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    private void enableSQLiteCascadeDeletes() {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            String sql = "PRAGMA foreign_keys=ON";
+            ps = conn.prepareStatement(sql);
+            ps.execute();
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(studentDetailsTable, ex, ex.getMessage(), WIDTH, null);
+        } finally {
+            try {
+                DbUtils.close(ps);
+                DbUtils.close(conn);
+            } catch (SQLException ex) {
+                Logger.getLogger(mainFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 }
