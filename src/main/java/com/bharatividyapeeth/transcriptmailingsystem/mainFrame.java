@@ -5,7 +5,6 @@
  */
 package com.bharatividyapeeth.transcriptmailingsystem;
 
-import static com.bharatividyapeeth.transcriptmailingsystem.Data.Constants.COLLECTED;
 import static com.bharatividyapeeth.transcriptmailingsystem.Data.Constants.READY;
 import com.bharatividyapeeth.transcriptmailingsystem.Data.Student;
 import java.awt.CardLayout;
@@ -25,14 +24,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
-import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.swing.JLabel;
@@ -50,6 +46,15 @@ import static com.bharatividyapeeth.transcriptmailingsystem.Data.Constants.RECEI
 import static com.bharatividyapeeth.transcriptmailingsystem.Data.Constants.TRANSCRIPT_COLLECTED;
 import static com.bharatividyapeeth.transcriptmailingsystem.Data.Constants.TRANSCRIPT_READY;
 import static com.bharatividyapeeth.transcriptmailingsystem.Data.Constants.TRANSCRIPT_RECIEVED;
+import com.bharatividyapeeth.transcriptmailingsystem.Exception.TranscriptException;
+import static java.awt.image.ImageObserver.WIDTH;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.text.ParseException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.table.TableColumnModel;
+import org.oxbow.swingbits.table.filter.TableRowFilterSupport;
 
 /**
  *
@@ -63,12 +68,14 @@ public class mainFrame extends javax.swing.JFrame {
     CardLayout cardLayout;
     DBConnection dbConn = new DBConnection();
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+    SimpleDateFormat simpleFormat = new SimpleDateFormat("dd-MM-yyyy");
     Properties props = new Properties();
     public mainFrame() {
         
         initComponents();
         customizeTables();
         loadProperties();
+        initializeOtherStuff();
         cardLayout = (CardLayout) (rightPanel.getLayout());
     }
 
@@ -106,11 +113,11 @@ public class mainFrame extends javax.swing.JFrame {
         cancel_btn = new javax.swing.JLabel();
         submit_btn = new javax.swing.JLabel();
         studentsPanel = new javax.swing.JPanel();
-        jScrollPane1 = new javax.swing.JScrollPane();
+        jScrollPane6 = new javax.swing.JScrollPane();
         studentDetailsTable = new javax.swing.JTable();
         recievedPanel = new javax.swing.JPanel();
         jScrollPane5 = new javax.swing.JScrollPane();
-        recievedTable = new javax.swing.JTable();
+        receivedTable = new javax.swing.JTable();
         move_to_ready_btn1 = new javax.swing.JLabel();
         readyPanel = new javax.swing.JPanel();
         jScrollPane4 = new javax.swing.JScrollPane();
@@ -122,7 +129,6 @@ public class mainFrame extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Transcript Mailing System");
-        setPreferredSize(new java.awt.Dimension(1280, 640));
         setResizable(false);
 
         leftPanel.setBackground(new java.awt.Color(29, 47, 61));
@@ -155,7 +161,7 @@ public class mainFrame extends javax.swing.JFrame {
                 trans_rec_btnMouseClicked(evt);
             }
         });
-        leftPanel.add(trans_rec_btn, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 260, 150, 30));
+        leftPanel.add(trans_rec_btn, new org.netbeans.lib.awtextra.AbsoluteConstraints(55, 260, 150, 30));
 
         trans_ready_btn.setBackground(new java.awt.Color(33, 63, 86));
         trans_ready_btn.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
@@ -169,7 +175,7 @@ public class mainFrame extends javax.swing.JFrame {
                 trans_ready_btnMouseClicked(evt);
             }
         });
-        leftPanel.add(trans_ready_btn, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 310, 150, 30));
+        leftPanel.add(trans_ready_btn, new org.netbeans.lib.awtextra.AbsoluteConstraints(55, 310, 150, 30));
 
         trans_collected_btn.setBackground(new java.awt.Color(33, 63, 86));
         trans_collected_btn.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
@@ -183,7 +189,7 @@ public class mainFrame extends javax.swing.JFrame {
                 trans_collected_btnMouseClicked(evt);
             }
         });
-        leftPanel.add(trans_collected_btn, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 360, 150, 30));
+        leftPanel.add(trans_collected_btn, new org.netbeans.lib.awtextra.AbsoluteConstraints(55, 360, 150, 30));
 
         student_list_btn.setBackground(new java.awt.Color(33, 63, 86));
         student_list_btn.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
@@ -197,7 +203,7 @@ public class mainFrame extends javax.swing.JFrame {
                 student_list_btnMouseClicked(evt);
             }
         });
-        leftPanel.add(student_list_btn, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 210, 150, 30));
+        leftPanel.add(student_list_btn, new org.netbeans.lib.awtextra.AbsoluteConstraints(55, 210, 150, 30));
 
         add_new_record_btn.setBackground(new java.awt.Color(33, 63, 86));
         add_new_record_btn.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
@@ -212,7 +218,7 @@ public class mainFrame extends javax.swing.JFrame {
                 add_new_record_btnMouseClicked(evt);
             }
         });
-        leftPanel.add(add_new_record_btn, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 160, 150, 30));
+        leftPanel.add(add_new_record_btn, new org.netbeans.lib.awtextra.AbsoluteConstraints(55, 160, 150, 30));
 
         jSplitPane2.setLeftComponent(leftPanel);
 
@@ -230,47 +236,52 @@ public class mainFrame extends javax.swing.JFrame {
         newRecord.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         studentName.setBackground(new java.awt.Color(231, 235, 238));
-        newRecord.add(studentName, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 70, 150, -1));
+        studentName.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        studentName.setAutoscrolls(false);
+        newRecord.add(studentName, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 60, 160, 30));
 
         mobNumber.setBackground(new java.awt.Color(231, 235, 238));
+        mobNumber.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        mobNumber.setAutoscrolls(false);
         mobNumber.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 mobNumberActionPerformed(evt);
             }
         });
-        newRecord.add(mobNumber, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 120, 150, -1));
+        newRecord.add(mobNumber, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 120, 160, 30));
 
         emailAddress.setBackground(new java.awt.Color(231, 235, 238));
-        emailAddress.setText("chinmaytawde15@gmail.com");
-        newRecord.add(emailAddress, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 170, 190, -1));
+        emailAddress.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        newRecord.add(emailAddress, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 180, 160, 30));
 
         departmentComboBox.setBackground(new java.awt.Color(231, 235, 238));
+        departmentComboBox.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         departmentComboBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 departmentComboBoxActionPerformed(evt);
             }
         });
-        newRecord.add(departmentComboBox, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 240, 180, -1));
+        newRecord.add(departmentComboBox, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 240, 170, 30));
 
         namelbl.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
         namelbl.setForeground(new java.awt.Color(255, 255, 255));
         namelbl.setText("Name :");
-        newRecord.add(namelbl, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 70, -1, -1));
+        newRecord.add(namelbl, new org.netbeans.lib.awtextra.AbsoluteConstraints(291, 70, 50, 20));
 
         phnlbl.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
         phnlbl.setForeground(new java.awt.Color(255, 255, 255));
         phnlbl.setText("Mobile No :");
-        newRecord.add(phnlbl, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 120, -1, -1));
+        newRecord.add(phnlbl, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 130, -1, -1));
 
         emaillbl.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
         emaillbl.setForeground(new java.awt.Color(255, 255, 255));
         emaillbl.setText("Email Address :");
-        newRecord.add(emaillbl, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 170, -1, -1));
+        newRecord.add(emaillbl, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 190, -1, -1));
 
         deptlbl.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
         deptlbl.setForeground(new java.awt.Color(255, 255, 255));
         deptlbl.setText("Department :");
-        newRecord.add(deptlbl, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 240, -1, -1));
+        newRecord.add(deptlbl, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 240, -1, 30));
 
         passinglbl.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
         passinglbl.setForeground(new java.awt.Color(255, 255, 255));
@@ -280,6 +291,7 @@ public class mainFrame extends javax.swing.JFrame {
         passingDate.setBackground(new java.awt.Color(231, 235, 238));
         passingDate.setForeground(new java.awt.Color(231, 235, 238));
         passingDate.setDateFormatString("dd-MM-yyyy");
+        passingDate.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         passingDate.setMaximumSize(new java.awt.Dimension(50, 20));
         passingDate.setPreferredSize(new java.awt.Dimension(50, 20));
         newRecord.add(passingDate, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 300, 120, 30));
@@ -319,10 +331,8 @@ public class mainFrame extends javax.swing.JFrame {
         studentsPanel.setPreferredSize(new java.awt.Dimension(870, 472));
         studentsPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        jScrollPane1.setBackground(new java.awt.Color(33, 63, 86));
-        jScrollPane1.setBorder(null);
-        jScrollPane1.setOpaque(false);
-
+        studentDetailsTable.setAutoCreateRowSorter(true);
+        studentDetailsTable.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         studentDetailsTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
@@ -331,20 +341,23 @@ public class mainFrame extends javax.swing.JFrame {
 
             }
         ));
+        studentDetailsTable.setToolTipText("studentDetailsTable");
         studentDetailsTable.setIntercellSpacing(new java.awt.Dimension(0, 0));
         studentDetailsTable.setRowHeight(25);
         studentDetailsTable.setSelectionBackground(new java.awt.Color(232, 57, 95));
-        jScrollPane1.setViewportView(studentDetailsTable);
+        jScrollPane6.setViewportView(studentDetailsTable);
         studentDetailsTable.getColumnModel().getSelectionModel().setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
 
-        studentsPanel.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 70, 870, -1));
+        studentsPanel.add(jScrollPane6, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 70, 870, -1));
 
         rightPanel.add(studentsPanel, "studentsPanel");
 
         recievedPanel.setBackground(new java.awt.Color(33, 63, 86));
         recievedPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        recievedTable.setModel(new javax.swing.table.DefaultTableModel(
+        receivedTable.setAutoCreateRowSorter(true);
+        receivedTable.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        receivedTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
             },
@@ -352,11 +365,12 @@ public class mainFrame extends javax.swing.JFrame {
 
             }
         ));
-        recievedTable.setIntercellSpacing(new java.awt.Dimension(0, 0));
-        recievedTable.setRowHeight(25);
-        recievedTable.setSelectionBackground(new java.awt.Color(232, 57, 95));
-        jScrollPane5.setViewportView(recievedTable);
-        recievedTable.getColumnModel().getSelectionModel().setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        receivedTable.setToolTipText("recievedTable");
+        receivedTable.setIntercellSpacing(new java.awt.Dimension(0, 0));
+        receivedTable.setRowHeight(25);
+        receivedTable.setSelectionBackground(new java.awt.Color(232, 57, 95));
+        jScrollPane5.setViewportView(receivedTable);
+        receivedTable.getColumnModel().getSelectionModel().setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
 
         recievedPanel.add(jScrollPane5, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 70, 870, -1));
 
@@ -379,6 +393,8 @@ public class mainFrame extends javax.swing.JFrame {
         readyPanel.setBackground(new java.awt.Color(33, 63, 86));
         readyPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
+        readyTable.setAutoCreateRowSorter(true);
+        readyTable.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         readyTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
@@ -387,6 +403,7 @@ public class mainFrame extends javax.swing.JFrame {
 
             }
         ));
+        readyTable.setToolTipText("readyTable");
         readyTable.setIntercellSpacing(new java.awt.Dimension(0, 0));
         readyTable.setRowHeight(25);
         readyTable.setSelectionBackground(new java.awt.Color(232, 57, 95));
@@ -414,6 +431,8 @@ public class mainFrame extends javax.swing.JFrame {
         collectedPanel.setBackground(new java.awt.Color(33, 63, 86));
         collectedPanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
+        collectedTable.setAutoCreateRowSorter(true);
+        collectedTable.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         collectedTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
@@ -422,6 +441,8 @@ public class mainFrame extends javax.swing.JFrame {
 
             }
         ));
+        collectedTable.setToolTipText("collectedTable");
+        collectedTable.setGridColor(new java.awt.Color(255, 255, 255));
         collectedTable.setIntercellSpacing(new java.awt.Dimension(0, 0));
         collectedTable.setRowHeight(25);
         collectedTable.setSelectionBackground(new java.awt.Color(232, 57, 95));
@@ -492,8 +513,7 @@ public class mainFrame extends javax.swing.JFrame {
     private void add_new_record_btnMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_add_new_record_btnMouseClicked
         setLblColor(add_new_record_btn);
         resetBtnColors(student_list_btn, trans_rec_btn, trans_ready_btn, trans_collected_btn);
-        cardLayout.show(rightPanel, "newRecord");
-        fillDeptCombo();
+        cardLayout.show(rightPanel, "newRecord");      
     }//GEN-LAST:event_add_new_record_btnMouseClicked
 
     private void student_list_btnMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_student_list_btnMouseClicked
@@ -535,6 +555,7 @@ public class mainFrame extends javax.swing.JFrame {
             //checkValidName(name);
             String number = mobNumber.getText();
             //checkValidNumber(number);
+            //checkUnique(number);
             String emailAdd = emailAddress.getText();
             checkValidEmailAdd(emailAdd);
             String dept = departmentComboBox.getItemAt(departmentComboBox.getSelectedIndex());
@@ -580,13 +601,13 @@ public class mainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_submit_btnMouseClicked
 
     private void move_to_ready_btn1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_move_to_ready_btn1MouseClicked
-        int[] rows = recievedTable.getSelectedRows();
+        int[] rows = receivedTable.getSelectedRows();
         List<Student> studentList = new ArrayList<>();
         for (int i : rows) {
-            String id = (String) recievedTable.getValueAt(i, 0);
+            String id = (String) receivedTable.getValueAt(i, 0);
             int studentId = Integer.parseInt(id);
-            String name = (String) recievedTable.getValueAt(i, 1);
-            String emailAdd = (String) recievedTable.getValueAt(i, 3);
+            String name = (String) receivedTable.getValueAt(i, 1);
+            String emailAdd = (String) receivedTable.getValueAt(i, 3);
             studentList.add(new Student(studentId, name, emailAdd));
             moveToNextState(studentId, TRANSCRIPT_RECIEVED, TRANSCRIPT_READY, "ready_date");
         }
@@ -595,7 +616,7 @@ public class mainFrame extends javax.swing.JFrame {
             try {
                 sendMail(studentList, READY);
             } catch (SQLException ex) {
-                Logger.getLogger(mainFrame.class.getName()).log(Level.SEVERE, null, ex);
+                JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }//GEN-LAST:event_move_to_ready_btn1MouseClicked
@@ -649,9 +670,9 @@ public class mainFrame extends javax.swing.JFrame {
                 tableModel.addRow(row);
             }
             tableModel.fireTableDataChanged();
-            studentDetailsTable.setDefaultEditor(Object.class, null);
+            //studentDetailsTable.setDefaultEditor(Object.class, null);
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, ex, ex.getMessage(), WIDTH, null);
+            JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         } finally {
             DbUtils.closeQuietly(psmt);
             DbUtils.closeQuietly(rs);
@@ -674,7 +695,7 @@ public class mainFrame extends javax.swing.JFrame {
             int columnCount = rsmd.getColumnCount();
 
             // for changing column and row model
-            DefaultTableModel tableModel = (DefaultTableModel) recievedTable.getModel();
+            DefaultTableModel tableModel = (DefaultTableModel) receivedTable.getModel();
             // clear existing columns 
             tableModel.setColumnCount(0);
             // add specified columns to table
@@ -692,9 +713,8 @@ public class mainFrame extends javax.swing.JFrame {
                 tableModel.addRow(row);
             }
             tableModel.fireTableDataChanged();
-            recievedTable.setDefaultEditor(Object.class, null);
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, ex, ex.getMessage(), WIDTH, null);
+            JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         } finally {
             DbUtils.closeQuietly(psmt);
             DbUtils.closeQuietly(rs);
@@ -735,9 +755,8 @@ public class mainFrame extends javax.swing.JFrame {
                 tableModel.addRow(row);
             }
             tableModel.fireTableDataChanged();
-            readyTable.setDefaultEditor(Object.class, null);
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, ex, ex.getMessage(), WIDTH, null);
+            JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         } finally {
             DbUtils.closeQuietly(psmt);
             DbUtils.closeQuietly(rs);
@@ -777,10 +796,9 @@ public class mainFrame extends javax.swing.JFrame {
                 }
                 tableModel.addRow(row);
             }
-            tableModel.fireTableDataChanged();
-            collectedTable.setDefaultEditor(Object.class, null);
+            tableModel.fireTableDataChanged();           
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, ex, ex.getMessage(), WIDTH, null);
+            JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         } finally {
             DbUtils.closeQuietly(psmt);
             DbUtils.closeQuietly(rs);
@@ -799,7 +817,7 @@ public class mainFrame extends javax.swing.JFrame {
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
+                if ("Windows".equals(info.getName())) {
                     javax.swing.UIManager.setLookAndFeel(info.getClassName());
                     break;
                 }
@@ -835,10 +853,10 @@ public class mainFrame extends javax.swing.JFrame {
     private javax.swing.JLabel emaillbl;
     private javax.swing.JPanel introPanel;
     private javax.swing.JLabel jLabel8;
-    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JScrollPane jScrollPane5;
+    private javax.swing.JScrollPane jScrollPane6;
     private javax.swing.JSplitPane jSplitPane2;
     private javax.swing.JPanel leftPanel;
     private javax.swing.JTextField mobNumber;
@@ -851,8 +869,8 @@ public class mainFrame extends javax.swing.JFrame {
     private javax.swing.JLabel phnlbl;
     private javax.swing.JPanel readyPanel;
     private javax.swing.JTable readyTable;
+    private javax.swing.JTable receivedTable;
     private javax.swing.JPanel recievedPanel;
-    private javax.swing.JTable recievedTable;
     private javax.swing.JPanel rightPanel;
     private javax.swing.JTable studentDetailsTable;
     private javax.swing.JTextField studentName;
@@ -864,23 +882,23 @@ public class mainFrame extends javax.swing.JFrame {
     private javax.swing.JLabel trans_rec_btn;
     // End of variables declaration//GEN-END:variables
 
-    private void checkValidName(String name) throws Exception {
+    private void checkValidName(String name) throws TranscriptException {
         if (isBlank(name)) {
-            throw new Exception("The name field cannot be blank");
+            throw new TranscriptException("The name field cannot be blank");
         } else if (!isAlphaSpace(name)) {
-            throw new Exception("Name cannot contain digits or special characters");
+            throw new TranscriptException("Name cannot contain digits or special characters");
         }
     }
 
-    private void checkValidNumber(String number) throws Exception {
+    private void checkValidNumber(String number) throws TranscriptException {
         if (!isNumeric(number)) {
-            throw new Exception("Should only contain numbers");
+            throw new TranscriptException("Should only contain numbers");
         } else if (number.length() != 10) {
-            throw new Exception("Mobile number entered in invalid");
+            throw new TranscriptException("Mobile number entered in invalid");
         }
     }
 
-    private void checkValidEmailAdd(String emailAdd) throws Exception {
+    private void checkValidEmailAdd(String emailAdd) throws TranscriptException {
         boolean isValid;
         String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\."
                 + "[a-zA-Z0-9_+&*-]+)*@"
@@ -894,7 +912,7 @@ public class mainFrame extends javax.swing.JFrame {
             isValid = pat.matcher(emailAdd).matches();
         }
         if (!isValid) {
-            throw new Exception("Email address entered is not valid");
+            throw new TranscriptException("Email address entered is not valid");
         }
     }
 
@@ -943,7 +961,7 @@ public class mainFrame extends javax.swing.JFrame {
             for (Student student : students) {
                 //send message
                 message.addRecipient(Message.RecipientType.TO, new InternetAddress(student.getEmailAddress()));
-                Transport.send(message);
+                //Transport.send(message);                      //TODO : Turn it on later
                 setSentMailTrue(purpose, student.getId());
             }
             //JOptionPane.showMessageDialog(this, "Message sent successfully", "Email Information", JOptionPane.INFORMATION_MESSAGE);
@@ -999,12 +1017,76 @@ public class mainFrame extends javax.swing.JFrame {
     private void customizeTables() {
         setTableAttributes(studentDetailsTable);
         setTableAttributes(readyTable);
-        setTableAttributes(recievedTable);
+        setTableAttributes(receivedTable);
         setTableAttributes(collectedTable);
     }
 
     private void setTableAttributes(JTable table) {
-        
+        table = TableRowFilterSupport.forTable(table).searchable(true).useTableRenderers(true).apply();
+        table.addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                if ("tableCellEditor".equals(evt.getPropertyName())) {
+                    JTable table1 = (JTable) evt.getSource();
+                    if (!table1.isEditing()) {
+                        updateData(table1);
+                        refreshData(table1.getToolTipText());
+                    }
+                } 
+            }
+
+            private void updateData(JTable table1) {
+                Connection conn = null;
+                PreparedStatement ps = null;
+                try {
+                    int i = table1.getSelectedRow();
+                    conn = dbConn.getConnection();
+                    String id = (String) table1.getValueAt(i, 0);
+                    int studentId = Integer.parseInt(id);
+                    String name = (String) table1.getValueAt(i, 1);
+                    //checkValidName(name);
+                    String number = (String) table1.getValueAt(i, 2);
+                    //checkValidNumber(number);
+                    String emailAdd = (String) table1.getValueAt(i, 3);
+                    checkValidEmailAdd(emailAdd);
+                    String dept = (String) table1.getValueAt(i, 4);
+                    String date = (String) table1.getValueAt(i, 5);
+                    String formattedDate = sdf.format(simpleFormat.parse(date));
+
+                    String sql = "UPDATE Students set name = '" + name + "' , phone_number =  '" + number + "'"
+                            + ", email_address = '" + emailAdd + "', dept_code = '" + dept + "'"
+                            + ", passing_year = strftime('%d-%m-%Y', '" + formattedDate + "') "
+                            + "WHERE id = " + studentId;
+                    ps = conn.prepareStatement(sql);
+                    ps.execute();
+                } catch (TranscriptException ex) {
+                    JOptionPane.showMessageDialog(table1, ex, ex.getMessage(), WIDTH, null);
+                } catch (SQLException ex) {
+                    JOptionPane.showMessageDialog(table1, ex, ex.getMessage(), WIDTH, null);
+                } catch (ParseException ex) {
+                    Logger.getLogger(mainFrame.class.getName()).log(Level.SEVERE, null, ex);
+                } finally {
+                    try {
+                        DbUtils.close(ps);
+                        DbUtils.close(conn);
+                    } catch (SQLException ex) {
+                        Logger.getLogger(mainFrame.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+
+            private void refreshData(String toolTipText) {
+                if (toolTipText.equals(studentDetailsTable.getToolTipText())) {
+                    getStudentList();
+                } else if (toolTipText.equals(receivedTable.getToolTipText())) {
+                    getRecievedList();
+                } else if (toolTipText.equals(readyTable.getToolTipText())) {
+                    getReadyList();
+                } else if (toolTipText.equals(collectedTable.getToolTipText())) {
+                    getCollectedList();
+                }
+            }
+        });
         JTableHeader tableHeader = table.getTableHeader();
         tableHeader.setFont(new Font("Segoe UI", Font.BOLD, 12));
         tableHeader.setOpaque(false);
@@ -1043,13 +1125,14 @@ public class mainFrame extends javax.swing.JFrame {
         PreparedStatement ps = null;
         try {
             String sql = "INSERT INTO " + tableTo + " (id, name, phone_number, email_address, dept_code, " + dateColumn + ")"
-                        + "SELECT id, name, phone_number, email_address, dept_code, datetime('now') FROM Students WHERE id = " + studentId;
+                        + "SELECT id, name, phone_number, email_address, dept_code, datetime('now', 'localtime') FROM Students WHERE id = " + studentId;
             conn = dbConn.getConnection();
             ps = conn.prepareStatement(sql);
             ps.execute();
             sql = "DELETE FROM " + tableFrom + " WHERE id = " + studentId;
             ps = conn.prepareStatement(sql);
             ps.execute();
+            updateStudentStatus(studentId, tableTo);
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, ex, ex.getMessage(), WIDTH, null);
         } finally {
@@ -1061,4 +1144,67 @@ public class mainFrame extends javax.swing.JFrame {
             }
         }
     }    
+
+    private void initializeOtherStuff() {
+        fillDeptCombo();
+    }
+
+    private void checkUnique(String number) throws TranscriptException {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            int checkUniqueCount = 0;
+            conn = dbConn.getConnection();
+            String sql = "SELECT COUNT(1) FROM Students WHERE phone_numer = " + number;
+            ps = conn.prepareStatement(sql);
+            rs = ps.executeQuery();
+            while(rs.next()) {
+                checkUniqueCount = rs.getInt(1);
+            }
+            if (checkUniqueCount > 0) {
+                throw new TranscriptException("This phone number already exists in the database, Enter unique 10-digit phone number");
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(mainFrame.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                DbUtils.close(ps);
+                DbUtils.close(conn);
+            } catch (SQLException ex) {
+                Logger.getLogger(mainFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    private void updateStudentStatus(int studentId, String tableTo) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = dbConn.getConnection();
+            String columnName = getFlagColumn(tableTo);
+            String sql = "UPDATE Students set " + columnName + " = 1 WHERE id = " + studentId;
+            ps = conn.prepareStatement(sql);
+            ps.execute();        
+        } catch (SQLException ex) {
+            Logger.getLogger(mainFrame.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                DbUtils.close(ps);
+                DbUtils.close(conn);
+            } catch (SQLException ex) {
+                Logger.getLogger(mainFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    private String getFlagColumn(String tableTo) {       
+        if (tableTo.equals(TRANSCRIPT_READY)) {
+            return "is_ready";
+        } else if (tableTo.equals(TRANSCRIPT_COLLECTED)) {
+            return "is_collected";
+        }
+        return "";
+    }
 }
