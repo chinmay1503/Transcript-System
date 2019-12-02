@@ -49,16 +49,15 @@ import static com.bharatividyapeeth.transcriptmailingsystem.Data.Constants.RECEI
 import static com.bharatividyapeeth.transcriptmailingsystem.Data.Constants.TRANSCRIPT_COLLECTED;
 import static com.bharatividyapeeth.transcriptmailingsystem.Data.Constants.TRANSCRIPT_READY;
 import static com.bharatividyapeeth.transcriptmailingsystem.Data.Constants.TRANSCRIPT_RECIEVED;
+import static com.bharatividyapeeth.transcriptmailingsystem.Data.EmailMessage.end_message;
+import static com.bharatividyapeeth.transcriptmailingsystem.Data.EmailMessage.greeting;
+import static com.bharatividyapeeth.transcriptmailingsystem.Data.EmailMessage.header_message;
+import static com.bharatividyapeeth.transcriptmailingsystem.Data.EmailMessage.ready_message;
+import static com.bharatividyapeeth.transcriptmailingsystem.Data.EmailMessage.recieved_message;
 import static javax.swing.JOptionPane.showMessageDialog;
 import static org.apache.commons.lang3.StringUtils.isAlphaSpace;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
-
-//import static com.bharatividyapeeth.transcriptmailingsystem.Data.EmailMessage.end_message;
-//import static com.bharatividyapeeth.transcriptmailingsystem.Data.EmailMessage.greeting;
-//import static com.bharatividyapeeth.transcriptmailingsystem.Data.EmailMessage.header_message;
-//import static com.bharatividyapeeth.transcriptmailingsystem.Data.EmailMessage.ready_message;
-//import static com.bharatividyapeeth.transcriptmailingsystem.Data.EmailMessage.recieved_message;
 
 /**
  *
@@ -979,8 +978,8 @@ public class mainFrame extends javax.swing.JFrame {
         String from = props.getProperty("email.id");
         String password = props.getProperty("email.password");
         String sub = getSubject(purpose);
-        String header = "";
-        String msg = header + " " + getMessage(purpose) + " ";
+        String header = header_message + greeting + " " + "name !";
+        String msg = header + " " + getMessage(purpose) + " " + end_message;
         Session session = getSession(from, password);
         //compose message    
         try {
@@ -1038,9 +1037,9 @@ public class mainFrame extends javax.swing.JFrame {
 
     private String getMessage(String purpose) {
         if (purpose.equals(RECEIVED)) {
-            return "RECEIVED";
+            return recieved_message;
         } else if (purpose.equals(READY)) {
-            return "READY";
+            return ready_message;
         }
         return "";
     }
