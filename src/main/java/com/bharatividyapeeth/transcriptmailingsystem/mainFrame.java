@@ -5,63 +5,60 @@
  */
 package com.bharatividyapeeth.transcriptmailingsystem;
 
-import static com.bharatividyapeeth.transcriptmailingsystem.Data.Constants.READY;
+import com.bharatividyapeeth.transcriptmailingsystem.Data.DBConnection;
 import com.bharatividyapeeth.transcriptmailingsystem.Data.Student;
-import java.awt.CardLayout;
-import java.awt.Color;
-import java.awt.Font;
+import com.bharatividyapeeth.transcriptmailingsystem.Exception.TranscriptException;
+import org.apache.commons.dbutils.DbUtils;
+import org.apache.commons.io.IOUtils;
+import org.oxbow.swingbits.table.filter.TableRowFilterSupport;
+
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
+import java.awt.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.PasswordAuthentication;
-import javax.mail.Session;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import static javax.swing.JOptionPane.showMessageDialog;
-import javax.swing.JTable;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
-import org.apache.commons.dbutils.DbUtils;
-import org.apache.commons.io.IOUtils;
-import static org.apache.commons.lang3.StringUtils.isAlphaSpace;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNumeric;
+
+import static com.bharatividyapeeth.transcriptmailingsystem.Data.Constants.READY;
 import static com.bharatividyapeeth.transcriptmailingsystem.Data.Constants.RECEIVED;
 import static com.bharatividyapeeth.transcriptmailingsystem.Data.Constants.TRANSCRIPT_COLLECTED;
 import static com.bharatividyapeeth.transcriptmailingsystem.Data.Constants.TRANSCRIPT_READY;
 import static com.bharatividyapeeth.transcriptmailingsystem.Data.Constants.TRANSCRIPT_RECIEVED;
-import static com.bharatividyapeeth.transcriptmailingsystem.Data.EmailMessage.end_message;
-import static com.bharatividyapeeth.transcriptmailingsystem.Data.EmailMessage.greeting;
-import static com.bharatividyapeeth.transcriptmailingsystem.Data.EmailMessage.header_message;
-import static com.bharatividyapeeth.transcriptmailingsystem.Data.EmailMessage.ready_message;
-import static com.bharatividyapeeth.transcriptmailingsystem.Data.EmailMessage.recieved_message;
-import com.bharatividyapeeth.transcriptmailingsystem.Exception.TranscriptException;
-import static java.awt.image.ImageObserver.WIDTH;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.text.ParseException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.mail.Transport;
-import javax.swing.table.TableColumnModel;
-import org.oxbow.swingbits.table.filter.TableRowFilterSupport;
-import org.sqlite.SQLiteDataSource;
+import static javax.swing.JOptionPane.showMessageDialog;
+import static org.apache.commons.lang3.StringUtils.isAlphaSpace;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNumeric;
+
+//import static com.bharatividyapeeth.transcriptmailingsystem.Data.EmailMessage.end_message;
+//import static com.bharatividyapeeth.transcriptmailingsystem.Data.EmailMessage.greeting;
+//import static com.bharatividyapeeth.transcriptmailingsystem.Data.EmailMessage.header_message;
+//import static com.bharatividyapeeth.transcriptmailingsystem.Data.EmailMessage.ready_message;
+//import static com.bharatividyapeeth.transcriptmailingsystem.Data.EmailMessage.recieved_message;
 
 /**
  *
@@ -982,8 +979,8 @@ public class mainFrame extends javax.swing.JFrame {
         String from = props.getProperty("email.id");
         String password = props.getProperty("email.password");
         String sub = getSubject(purpose);
-        String header = header_message + greeting + " " + "name !";
-        String msg = header + " " + getMessage(purpose) + " " + end_message;
+        String header = "";
+        String msg = header + " " + getMessage(purpose) + " ";
         Session session = getSession(from, password);
         //compose message    
         try {
@@ -1041,9 +1038,9 @@ public class mainFrame extends javax.swing.JFrame {
 
     private String getMessage(String purpose) {
         if (purpose.equals(RECEIVED)) {
-            return recieved_message;
+            return "RECEIVED";
         } else if (purpose.equals(READY)) {
-            return ready_message;
+            return "READY";
         }
         return "";
     }
