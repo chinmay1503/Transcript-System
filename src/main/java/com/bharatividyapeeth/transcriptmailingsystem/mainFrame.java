@@ -61,7 +61,7 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 /**
  *
- * @author ShAd0w
+ * @author Chinmay
  */
 public class mainFrame extends javax.swing.JFrame {
 
