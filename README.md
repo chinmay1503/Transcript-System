@@ -30,13 +30,13 @@ overall progress
 <img width="659" alt="image" src="https://user-images.githubusercontent.com/36131683/158054684-8e5b5bd1-150b-4241-bb5f-e559fdde7803.png">
 - 1: Indicates complete state, 0: To be completed.
 - We can edit any field by double clicking it and making changes to it.
-- We can also delete any student record; it also supports selecting multiple records to
-delete at once
+- We can also delete any student record; it also supports selecting multiple records to delete at once
 
 ### Different Stages
 <img width="658" alt="image" src="https://user-images.githubusercontent.com/36131683/158054703-3249f900-61e8-4211-9e46-a969149fd737.png">
 <img width="654" alt="image" src="https://user-images.githubusercontent.com/36131683/158054710-52dbc043-d99e-4838-844e-318b605ff879.png">
 <img width="659" alt="image" src="https://user-images.githubusercontent.com/36131683/158054719-213c6e16-f8cf-4d37-813c-203aa26347ec.png">
+
 - At Each stage you can click the button below to move it to the next stage.
 - Also supports multi select to move multiple students at once.
 
