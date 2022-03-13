@@ -23,11 +23,13 @@ overall progress
 <img width="659" alt="image" src="https://user-images.githubusercontent.com/36131683/158054594-e49b0548-89d7-4d81-97f7-a241a5390368.png">
 <img width="655" alt="image" src="https://user-images.githubusercontent.com/36131683/158054606-77c27951-d10c-429f-b724-551b0aca3fc2.png">
 <img width="652" alt="image" src="https://user-images.githubusercontent.com/36131683/158054610-2c96f536-c568-46f5-8f62-ac08ae9e1d59.png">
+
 - Checks for valid and unique names, mobile numbers, and email addresses.
 - Cancel button resets all the fields to blank.
 
 ### Student List View
 <img width="659" alt="image" src="https://user-images.githubusercontent.com/36131683/158054684-8e5b5bd1-150b-4241-bb5f-e559fdde7803.png">
+
 - 1: Indicates complete state, 0: To be completed.
 - We can edit any field by double clicking it and making changes to it.
 - We can also delete any student record; it also supports selecting multiple records to delete at once
@@ -42,6 +44,7 @@ overall progress
 
 ### Email Message
 <img width="667" alt="image" src="https://user-images.githubusercontent.com/36131683/158054754-099fd9a1-09ec-4c0a-8abb-16793a3edb34.png">
+
 - The subject and the body are unique for each stage.
 - Custom personal greeting
 
